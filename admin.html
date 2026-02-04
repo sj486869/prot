@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS | COMMAND CENTER</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        void: '#030303',
+                        panel: '#0a0a0f',
+                        cyan: '#00f0ff',
+                        purple: '#7000ff',
+                        success: '#00ff41',
+                        danger: '#ff2a6d'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #030303; color: #e2e8f0; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+        .glass { background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .nav-item.active { background: rgba(0, 240, 255, 0.1); border-left: 2px solid #00f0ff; color: #00f0ff; }
+        .loader { border: 2px solid rgba(0, 240, 255, 0.1); border-left-color: #00f0ff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="flex h-screen w-screen">
+
+    <aside class="w-64 h-full bg-panel border-r border-white/5 flex flex-col justify-between z-20">
+        <div>
+            <div class="h-16 flex items-center px-6 border-b border-white/5">
+                <div class="font-bold text-lg tracking-wider">NEXUS<span class="text-cyan">_ADMIN</span></div>
+            </div>
+
+            <nav class="p-4 space-y-1">
+                <div class="text-xs font-mono text-gray-500 mb-2 px-2">DASHBOARD</div>
+                <button onclick="switchTab('overview')" id="nav-overview" class="nav-item active w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                    <i class="ri-dashboard-line"></i> Overview
+                </button>
+                <button onclick="switchTab('messages')" id="nav-messages" class="nav-item w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                    <i class="ri-mail-line"></i> Messages
+                    <span class="ml-auto text-[10px] bg-purple/20 text-purple px-1.5 py-0.5 rounded" id="msg-badge">0</span>
+                </button>
+
+                <div class="text-xs font-mono text-gray-500 mt-6 mb-2 px-2">DATABASE</div>
+                <button onclick="switchTab('deployed_protocols')" id="nav-protocols" class="nav-item w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                    <i class="ri-rocket-2-line"></i> Protocols
+                </button>
+                <button onclick="switchTab('modules_loaded')" id="nav-modules" class="nav-item w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                    <i class="ri-cpu-line"></i> Modules
+                </button>
+                <button onclick="switchTab('system_architecture')" id="nav-system" class="nav-item w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                    <i class="ri-server-line"></i> Architecture
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-white/5">
+            <a href="/" target="_blank" class="flex items-center gap-2 text-xs text-gray-500 hover:text-cyan transition-colors">
+                <i class="ri-external-link-line"></i> VIEW LIVE SITE
+            </a>
+            <div class="mt-2 text-[10px] font-mono text-gray-700">V.2.0.4 // SECURE</div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-void">
+        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+        <header class="h-16 border-b border-white/5 bg-panel/50 backdrop-blur-md flex justify-between items-center px-8 z-10">
+            <div class="flex items-center gap-4">
+                <h2 id="page-title" class="font-mono text-cyan">SYSTEM_OVERVIEW</h2>
+                <div id="loader" class="loader hidden"></div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="refreshAll()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-cyan hover:text-black transition-all">
+                    <i class="ri-refresh-line"></i>
+                </button>
+                <div class="flex items-center gap-3 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
+                    <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+                    <span class="text-xs font-mono">ADMIN_ROOT</span>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-area" class="flex-1 overflow-y-auto p-8 z-10 relative">
+            
+            <div id="view-overview" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass p-6 rounded-xl relative overflow-hidden">
+                        <div class="text-gray-400 text-xs font-mono mb-2">TOTAL VISITS</div>
+                        <div class="text-3xl font-bold">84.2K</div>
+                        <div class="absolute right-4 top-4 text-cyan opacity-20"><i class="ri-eye-line text-4xl"></i></div>
+                        <div class="w-full bg-gray-800 h-1 mt-4 rounded-full"><div class="w-[70%] h-full bg-cyan"></div></div>
+                    </div>
+                    <div class="glass p-6 rounded-xl relative overflow-hidden">
+                        <div class="text-gray-400 text-xs font-mono mb-2">SERVER LOAD</div>
+                        <div class="text-3xl font-bold text-success">12%</div>
+                        <div class="absolute right-4 top-4 text-success opacity-20"><i class="ri-server-line text-4xl"></i></div>
+                        <div class="w-full bg-gray-800 h-1 mt-4 rounded-full"><div class="w-[12%] h-full bg-success"></div></div>
+                    </div>
+                    <div class="glass p-6 rounded-xl relative overflow-hidden">
+                        <div class="text-gray-400 text-xs font-mono mb-2">MESSAGES</div>
+                        <div class="text-3xl font-bold text-purple" id="stats-msg-count">0</div>
+                        <div class="absolute right-4 top-4 text-purple opacity-20"><i class="ri-message-3-line text-4xl"></i></div>
+                    </div>
+                    <div class="glass p-6 rounded-xl relative overflow-hidden">
+                        <div class="text-gray-400 text-xs font-mono mb-2">SYSTEM STATUS</div>
+                        <div class="text-xl font-bold text-cyan">OPTIMAL</div>
+                        <div class="absolute right-4 top-4 text-cyan opacity-20"><i class="ri-shield-check-line text-4xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center">
+                        <h3 class="font-mono text-sm">RECENT ACTIVITY LOG</h3>
+                    </div>
+                    <div class="p-6">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-gray-500 font-mono border-b border-white/5">
+                                    <th class="pb-3 pl-2">TIMESTAMP</th>
+                                    <th class="pb-3">EVENT</th>
+                                    <th class="pb-3">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-mono">
+                                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td class="py-3 pl-2 text-gray-400">10:42:05</td>
+                                    <td>System Boot Sequence</td>
+                                    <td class="text-success">SUCCESS</td>
+                                </tr>
+                                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td class="py-3 pl-2 text-gray-400">10:42:08</td>
+                                    <td>Database Connection</td>
+                                    <td class="text-success">ESTABLISHED</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-data" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="relative">
+                        <i class="ri-search-line absolute left-3 top-2.5 text-gray-500"></i>
+                        <input type="text" placeholder="Search database..." class="bg-panel border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-cyan focus:outline-none w-64 text-white">
+                    </div>
+                    <button onclick="openModal()" class="flex items-center gap-2 bg-cyan text-black px-4 py-2 rounded-lg font-bold text-sm hover:bg-white transition-colors">
+                        <i class="ri-add-line"></i> NEW ENTRY
+                    </button>
+                </div>
+                <div class="glass rounded-xl overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-white/5 text-xs font-mono text-gray-400">
+                            <tr>
+                                <th class="px-6 py-4">ID</th>
+                                <th class="px-6 py-4">TITLE / NAME</th>
+                                <th class="px-6 py-4">TAGS</th>
+                                <th class="px-6 py-4 text-right">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body" class="text-sm divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-messages" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="relative w-1/2">
+                        <i class="ri-search-line absolute left-3 top-2.5 text-gray-500"></i>
+                        <input id="messages-search" type="text" placeholder="Search messages..." class="bg-panel border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-cyan focus:outline-none w-full text-white">
+                    </div>
+                    <button onclick="fetchMessages()" class="flex items-center gap-2 bg-cyan text-black px-4 py-2 rounded-lg font-bold text-sm hover:bg-white transition-colors">
+                        <i class="ri-refresh-line"></i> Refresh
+                    </button>
+                </div>
+                <div id="messages-container" class="grid grid-cols-1 gap-4 mt-4">
+                    </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300">
+        <div id="modal-panel" class="absolute right-0 top-0 h-full w-[500px] bg-[#0c0c12] border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <h3 class="font-mono text-cyan" id="modal-title">EDIT_ENTRY</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="ri-close-line text-xl"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <form id="itemForm" class="space-y-4">
+                    <input type="hidden" id="modal-id">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">TITLE</label>
+                        <input id="modal-name" type="text" class="w-full bg-void border border-white/10 rounded p-3 text-white focus:border-cyan focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="modal-desc" rows="5" class="w-full bg-void border border-white/10 rounded p-3 text-white focus:border-cyan focus:outline-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">TAGS</label>
+                        <input id="modal-tags" type="text" class="w-full bg-void border border-white/10 rounded p-3 text-white focus:border-cyan focus:outline-none">
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-white/5 flex justify-end gap-3 bg-void">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-400 text-sm">CANCEL</button>
+                <button onclick="saveItem()" class="px-6 py-2 bg-cyan text-black font-bold rounded">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 glass px-6 py-4 rounded-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+        <i class="ri-checkbox-circle-fill text-success text-xl"></i>
+        <div>
+            <div class="font-bold text-sm text-white">Success</div>
+            <div class="text-xs text-gray-400" id="toast-msg">Operation completed.</div>
+        </div>
+    </div>
+
+    <script>
+        const apiBase = '/api';
+        let currentSection = 'overview';
+        let cachedData = {};
+
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            currentSection = tabId;
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-white', 'bg-white/5'));
+            const map = { 'deployed_protocols': 'nav-protocols', 'modules_loaded': 'nav-modules', 'system_architecture': 'nav-system', 'messages': 'nav-messages', 'overview': 'nav-overview' };
+            const activeBtn = document.getElementById(map[tabId]);
+            if(activeBtn) { activeBtn.classList.add('active'); activeBtn.classList.remove('text-gray-400'); }
+
+            document.getElementById('view-overview').classList.add('hidden');
+            document.getElementById('view-data').classList.add('hidden');
+            document.getElementById('view-messages').classList.add('hidden');
+            document.getElementById('page-title').innerText = tabId.toUpperCase().replace('_', ' ');
+
+            if(tabId === 'overview') document.getElementById('view-overview').classList.remove('hidden');
+            else if (tabId === 'messages') {
+                document.getElementById('view-messages').classList.remove('hidden');
+                fetchMessages(); // Trigger fetch immediately
+            } else {
+                document.getElementById('view-data').classList.remove('hidden');
+                refreshAll(); // Ensure data is loaded
+            }
+        }
+
+        // --- MOCK DATA GENERATOR ---
+        function getMockMessages() {
+            return [
+                { id: 1, name: "Alice Corp", email: "alice@tech.com", message: "Interested in your AI architecture. Can we schedule a demo?", created: Date.now() },
+                { id: 2, name: "Recruiter Bob", email: "bob@hiring.io", message: "Saw your XAU Bot. Are you open to freelance fintech work?", created: Date.now() - 86400000 },
+                { id: 3, name: "System Alert", email: "admin@nexus.sys", message: "Server load check completed. Optimization recommended.", created: Date.now() - 172800000 }
+            ];
+        }
+
+        function getMockData() {
+            return {
+                'deployed_protocols': [
+                    { id: 101, title: 'Dora AI', description: 'Offline Voice Assistant using Llama-2', tags: ['Python', 'AI'] },
+                    { id: 102, title: 'XAU Bot', description: 'Algo Trading System for Gold', tags: ['Fintech', 'Python'] }
+                ],
+                'modules_loaded': [
+                    { id: 201, title: 'PyTorch Core', description: 'Deep Learning Framework', tags: ['Library'] },
+                    { id: 202, title: 'MetaAPI Bridge', description: 'Trading Connection Interface', tags: ['API'] }
+                ]
+            };
+        }
+
+        // --- DATA FETCHING (Resilient) ---
+        async function refreshAll() {
+            document.getElementById('loader').classList.remove('hidden');
+            try {
+                // Try fetching real data, fall back to mock if fails (simulating no backend)
+                const res = await fetch(apiBase + '/data').catch(() => null);
+                if (res && res.ok) cachedData = await res.json();
+                else cachedData = getMockData(); // FALLBACK
+                
+                if(currentSection !== 'overview' && currentSection !== 'messages') {
+                    renderTable(currentSection);
+                }
+            } finally {
+                document.getElementById('loader').classList.add('hidden');
+            }
+        }
+
+        async function fetchMessages() {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '<div class="loader mx-auto"></div>';
+            
+            // SIMULATE DELAY THEN LOAD
+            setTimeout(async () => {
+                let msgs = [];
+                try {
+                    const res = await fetch(apiBase + '/messages');
+                    if (res.ok) msgs = await res.json();
+                    else throw new Error("API Fail");
+                } catch (e) {
+                    console.warn("Using mock messages");
+                    msgs = getMockMessages(); // FALLBACK
+                }
+                renderMessagesList(msgs);
+            }, 500);
+        }
+
+        // --- RENDERERS ---
+        function renderTable(section) {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = '';
+            const items = cachedData[section] || [];
+            
+            if(items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500 font-mono">NO ENTRIES FOUND</td></tr>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-white/5 hover:bg-white/5 transition-colors group';
+                const tags = item.tags ? item.tags.map(t => `<span class="px-2 py-0.5 bg-white/10 rounded text-[10px] text-gray-300">${t}</span>`).join('') : '';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-gray-500 text-xs">#${item.id}</td>
+                    <td class="px-6 py-4"><div class="font-bold text-white">${item.title || item.name}</div><div class="text-xs text-gray-500">${item.description}</div></td>
+                    <td class="px-6 py-4 flex gap-1">${tags}</td>
+                    <td class="px-6 py-4 text-right"><button class="text-gray-500 hover:text-cyan p-2" onclick='openModal(${JSON.stringify(item)})'><i class="ri-edit-2-line"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderMessagesList(msgs) {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+            document.getElementById('stats-msg-count').innerText = msgs.length;
+            document.getElementById('msg-badge').innerText = msgs.length;
+
+            msgs.forEach(m => {
+                const el = document.createElement('div');
+                el.className = 'glass p-6 rounded-xl flex gap-4 animate-[fadeIn_0.3s_ease-out]';
+                el.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple to-blue-600 flex items-center justify-center font-bold text-sm">${m.name.charAt(0)}</div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><div class="font-bold text-white">${m.name}</div><div class="text-xs text-gray-400">${m.email}</div></div>
+                            <div class="text-xs font-mono text-gray-600">${new Date(m.created).toLocaleDateString()}</div>
+                        </div>
+                        <p class="text-gray-300 text-sm leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">${m.message}</p>
+                    </div>
+                    <div><button class="px-3 py-1 text-sm bg-danger/20 text-danger hover:bg-danger hover:text-white transition-colors rounded" onclick="this.closest('.glass').remove()">Delete</button></div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        // --- MODAL & TOAST ---
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalPanel = document.getElementById('modal-panel');
+
+        function openModal(item = null) {
+            document.getElementById('modal-id').value = item ? item.id : '';
+            document.getElementById('modal-name').value = item ? (item.title || item.name) : '';
+            document.getElementById('modal-desc').value = item ? item.description : '';
+            document.getElementById('modal-tags').value = item ? (item.tags || []).join(', ') : '';
+            modalOverlay.classList.remove('hidden');
+            setTimeout(() => { modalOverlay.classList.remove('opacity-0'); modalPanel.classList.remove('translate-x-full'); }, 10);
+        }
+
+        function closeModal() {
+            modalPanel.classList.add('translate-x-full'); modalOverlay.classList.add('opacity-0');
+            setTimeout(() => { modalOverlay.classList.add('hidden'); }, 300);
+        }
+
+        function saveItem() {
+            closeModal();
+            showToast("Success", "Data simulated saved.");
+        }
+
+        function showToast(title, msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+
+        // Init
+        refreshAll();
+    </script>
+</body>
+</html>
