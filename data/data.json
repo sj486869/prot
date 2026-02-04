@@ -1,0 +1,41 @@
+{
+  "deployed_protocols": [
+    {
+      "id": 1,
+      "title": "DORA AI",
+      "description": "A local, voice-controlled AI assistant that runs offline. Can execute system commands, answer queries, and code in real-time.",
+      "tags": ["PYTHON","LLMS","TTS/STT"],
+      "image": ""
+    },
+    {
+      "id": 2,
+      "title": "XAU-BOT",
+      "description": "High-frequency algorithmic trading bot for Gold (XAU/USD). Features GUI control (Tkinter) and automated risk management.",
+      "tags": ["PYTHON","TKINTER","API"],
+      "image": ""
+    },
+    {
+      "id": 3,
+      "title": "NEXUS OS",
+      "description": "A web-based operating system built with Next.js. Features a window manager, file system, and functional apps within the browser.",
+      "tags": ["NEXT.JS","TYPESCRIPT"],
+      "image": ""
+    }
+  ],
+  "modules_loaded": [
+    { "id": 1, "name": "PYTHON (PyTorch, OpenCV)", "level": "95%" },
+    { "id": 2, "name": "LOCAL LLMs (Llama, Mistral)", "level": "85%" },
+    { "id": 3, "name": "NEXT.JS / REACT", "level": "90%" },
+    { "id": 4, "name": "TRADING (MetaTrader, Pinescript)", "level": "80%" }
+  ],
+  "offerings": [
+    { "id": 1, "title": "E-commerce & Dropshipping", "description": "tech flow, landing pages, ad creatives", "tags": [] },
+    { "id": 2, "title": "International Clients", "description": "Upwork, Fiverr, direct outreach", "tags": [] },
+    { "id": 3, "title": "Freelancing (High-Value)", "description": "portfolio, automation, SaaS-ready work", "tags": [] }
+  ],
+  "system_architecture": [
+    { "id": 1, "key": "BIO", "content": "I am not just a student; I am an architect of code. Based in Bishnupur, I merge mathematics with syntax to create intelligent systems." },
+    { "id": 2, "key": "EXP", "content": "03 YRS — Coding Since Class 7" },
+    { "id": 3, "key": "FOCUS", "content": "AI/ML, FINTECH, WEB3" }
+  ]
+}
